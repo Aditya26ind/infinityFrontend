@@ -3,8 +3,9 @@
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { FaUser, FaTrophy } from 'react-icons/fa';
+import withAuth from '../components/protected';
 
-export default function PlayerComparison() {
+function PlayerComparison() {
   const dummyData = [
     {
       player1: { name: 'Virat Kohli', runs: 12000, wickets: 4, avg: 59.3, strikeRate: 93.25 },
@@ -81,3 +82,4 @@ export default function PlayerComparison() {
     </div>
   );
 }
+export default withAuth(PlayerComparison)

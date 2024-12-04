@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
+import withAuth from '../components/protected';
 
-export default function AIInfo() {
+function AIInfo() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
 
@@ -58,3 +59,4 @@ export default function AIInfo() {
     </div>
   );
 }
+export default withAuth(AIInfo);

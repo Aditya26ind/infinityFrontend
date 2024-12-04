@@ -4,8 +4,10 @@ import { useState } from "react";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import { FaFireAlt, FaTrophy } from "react-icons/fa"; // Icons for fire and trophy
+import withAuth from '../components/protected';
 
-export default function LiveScorecard() {
+
+function LiveScorecard() {
   const [liveMatchData] = useState([
     {
       team1: { name: "India", logo: "/india-logo.png", score: "250/4 (20)" },
@@ -127,3 +129,4 @@ export default function LiveScorecard() {
     </div>
   );
 }
+export default withAuth(LiveScorecard);

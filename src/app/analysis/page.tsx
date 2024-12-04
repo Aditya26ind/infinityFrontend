@@ -16,10 +16,11 @@ import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import SearchBar from '../components/searchBar';
 import { FaTrophy, FaRunning, FaBowlingBall } from 'react-icons/fa';
+import withAuth from '../components/protected';
 
 Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
-export default function PlayerAnalysis() {
+function PlayerAnalysis() {
   const [player] = useState({
     name: 'Virat Kohli',
     age: 33,
@@ -131,3 +132,4 @@ export default function PlayerAnalysis() {
     </div>
   );
 }
+export default  withAuth(PlayerAnalysis)

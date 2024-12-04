@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import DarkModeToggle from './DarkModeToggle';
-import { useState } from 'react'; // For managing navbar toggle
+import { useEffect, useState } from 'react'; // For managing navbar toggle
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulating login state
@@ -8,12 +8,22 @@ const Navbar = () => {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    // Implement your logout logic here (clear tokens, session, etc.)
+    localStorage.removeItem('accessToken')
+    window.location.href = '/dashboard';
   };
+
+  
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  const [token, setToken] = useState<string | null>(null); 
+  useEffect(() => { 
+     if (typeof window !== 'undefined') 
+      { setToken(localStorage.getItem('accessToken')); 
+
+      } }, []);
 
   return (
     <nav className="bg-gray-100 dark:bg-gray-800 p-6">
@@ -22,11 +32,13 @@ const Navbar = () => {
         <div className="text-2xl font-bold text-gray-800 dark:text-white">
           <Link href="/">Cricket Hub</Link>
         </div>
+        
 
         {/* Login/Logout/Signup and Dark Mode Toggle */}
         <div className="flex items-center space-x-6">
-          {!isLoggedIn ? (
+          {!token ? (
             <>
+              
               <Link href="/auth" className="text-gray-700 dark:text-gray-300 hover:text-green-500">
                 Login
               </Link>

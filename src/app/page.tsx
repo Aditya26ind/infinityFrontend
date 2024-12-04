@@ -3,8 +3,10 @@
 import Navbar from './components/navbar'; // Import Navbar component
 import Footer from './components/footer'; // Import Footer component
 import { FaTrophy, FaBullseye,FaAddressCard, FaChartLine, FaChartBar, FaCrosshairs, FaMedal, FaInfoCircle } from 'react-icons/fa'; // Import cricket-related icons
+import withAuth from './components/protected';
 
-export default function CricketLandingPage() {
+
+function CricketLandingPage() {
   return (
     <div className="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
       {/* Navbar */}
@@ -115,3 +117,4 @@ export default function CricketLandingPage() {
     </div>
   );
 }
+export default CricketLandingPage;

@@ -3,8 +3,10 @@
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { FaRunning, FaBowlingBall, FaTrophy } from 'react-icons/fa';
+import withAuth from '../components/protected';
 
-export default function RecordsList() {
+
+function RecordsList() {
   const records = [
     {
       title: "Fastest to 10,000 Runs in ODIs",
@@ -195,3 +197,4 @@ export default function RecordsList() {
     </div>
   );
 }
+export default withAuth(RecordsList);

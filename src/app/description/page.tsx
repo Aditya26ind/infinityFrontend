@@ -4,8 +4,10 @@ import { useState } from 'react';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import SearchBar from '../components/searchBar';
+import withAuth from '../components/protected';
 
-export default function PlayerBio() {
+
+ function PlayerBio() {
   const [player] = useState({
     name: 'Virat Kohli',
     description: `Virat Kohli is one of the most talented and fierce cricket players from India, known for his consistency in the game. 
@@ -65,3 +67,4 @@ export default function PlayerBio() {
     </div>
   );
 }
+export default withAuth(PlayerBio);
