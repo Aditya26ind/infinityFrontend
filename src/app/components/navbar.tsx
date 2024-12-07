@@ -96,14 +96,14 @@ const Navbar = () => {
           <Link href="/comparison" className="text-gray-700 dark:text-gray-300 hover:text-green-500">
             Comparison
           </Link>
-          <Link href="/analysis" className="text-gray-700 dark:text-gray-300 hover:text-green-500">
+          {/* <Link href="/analysis" className="text-gray-700 dark:text-gray-300 hover:text-green-500">
             Analysis
-          </Link>
+          </Link> */}
           <Link href="/milestones" className="text-gray-700 dark:text-gray-300 hover:text-green-500">
             Milestones
           </Link>
-          <Link href="/live" className="text-gray-700 dark:text-gray-300 hover:text-green-500">
-            Matches
+          <Link href="/live" className=" text-gray-700 dark:text-gray-300 hover:text-green-500">
+            Matches(coming soon)
           </Link>
           <Link href="/info" className="text-gray-700 dark:text-gray-300 hover:text-green-500">
             Information(AI)
