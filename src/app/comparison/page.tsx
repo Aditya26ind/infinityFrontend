@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
-import { FaUser, FaTrophy } from "react-icons/fa";
+import { FaUser, FaTrophy, FaSpinner } from "react-icons/fa";
 import withAuth from "../components/protected";
 import axios from "axios";
 import SearchBar from "../components/searchBar";
@@ -16,58 +16,65 @@ interface players {
 interface ides {
   player1: number;
   player2: number;
-
 }
+
 function PlayerComparison() {
   const [players, setPlayers] = useState<players>();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const [ids , setIds]= useState<ides|null>(null);
+  const [ids, setIds] = useState<ides|null>(null);
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
   const accessToken = localStorage.getItem("accessToken");
 
-  const [id1, setId1]= useState(null);
-  const [id2, setId2]= useState(null);
+  const [id1, setId1] = useState(null);
+  const [id2, setId2] = useState(null);
 
   const handleCompare = async () => {
-    const player1Batting = await axios.get(
-      `${API_BASE_URL}/players/batting/${id1}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-    const player1Bowling = await axios.get(
-      `${API_BASE_URL}/players/bowling/${id1}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-    const player2Batting = await axios.get(
-      `${API_BASE_URL}/players/batting/${id2}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-    const player2Bowling = await axios.get(
-      `${API_BASE_URL}/players/bowling/${id2}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
+    // Reset previous state
+    setPlayers(undefined);
+    setError(null);
+    setLoading(true);
 
-    const player1BattingData = player1Batting.data[0];
-    console.log(player1BattingData);
-    const player1BowlingData = player1Bowling.data[0];
-    console.log(player1BowlingData);
-    const player2BattingData = player2Batting.data[0];
-    console.log(player2BattingData);
-    const player2BowlingData = player2Bowling.data[0];
-    console.log(player2BowlingData);
+    try {
+      // Parallel API calls for better performance
+      const [player1Batting, player1Bowling, player2Batting, player2Bowling] = await Promise.all([
+        axios.get(`${API_BASE_URL}/players/batting/${id1}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }),
+        axios.get(`${API_BASE_URL}/players/bowling/${id1}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }),
+        axios.get(`${API_BASE_URL}/players/batting/${id2}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }),
+        axios.get(`${API_BASE_URL}/players/bowling/${id2}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+      ]);
 
-    setPlayers({
-      batting: { first: player1BattingData,second: player2BattingData },
-      bowling: { first: player1BowlingData, second: player2BowlingData },
-    });
+      const player1BattingData = player1Batting.data[0];
+      const player1BowlingData = player1Bowling.data[0];
+      const player2BattingData = player2Batting.data[0];
+      const player2BowlingData = player2Bowling.data[0];
+
+      setPlayers({
+        batting: { 
+          first: player1BattingData, 
+          second: player2BattingData 
+        },
+        bowling: { 
+          first: player1BowlingData, 
+          second: player2BowlingData 
+        },
+      });
+    } catch (err) {
+      setError("Failed to fetch player data. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,25 +91,56 @@ function PlayerComparison() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Input for Player 1 */}
             <div className="relative">
-            <SearchBar onPlayerSelect={(player: any) => setId1(player.uniqueId)} />
+              <SearchBar onPlayerSelect={(player: any) => setId1(player.uniqueId)} />
             </div>
 
             {/* Input for Player 2 */}
             <div className="relative">
-            <SearchBar onPlayerSelect={(player: any) => setId2(player.uniqueId)} />
+              <SearchBar onPlayerSelect={(player: any) => setId2(player.uniqueId)} />
             </div>
           </div>
           <button
             onClick={handleCompare}
-            className="mt-8 bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-full shadow-lg transition-transform transform hover:scale-105"
+            disabled={!id1 || !id2 || loading}
+            className={`mt-8 text-white py-3 px-6 rounded-full shadow-lg transition-transform transform hover:scale-105 ${
+              !id1 || !id2 || loading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-green-500 hover:bg-green-600'
+            }`}
           >
-            Compare Players
+            {loading ? (
+              <span className="flex items-center justify-center">
+                <FaSpinner className="animate-spin mr-2" />
+                Comparing...
+              </span>
+            ) : (
+              "Compare Players"
+            )}
           </button>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
         </div>
       </section>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="flex justify-center items-center py-20">
+          <div className="flex flex-col items-center">
+            <FaSpinner className="animate-spin text-green-500 w-16 h-16 mb-4" />
+            <p className="text-xl text-gray-600 dark:text-gray-300">
+              Loading player data...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Comparison Result Section */}
-      {players && (
+      {players && !loading && (
         <section className="py-20 bg-gray-100 dark:bg-gray-900">
           <div className="max-w-6xl mx-auto px-6">
             <h2 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
@@ -138,7 +176,7 @@ function PlayerComparison() {
                     <span className="font-semibold text-lg">
                     {(
                     players.batting.first.average.reduce((acc, run) => acc + Number(run), 0) /
-                    players.batting.second.average.length
+                    players.batting.first.average.length
                   ).toFixed(2)}
                     </span>
                   </div>
@@ -147,7 +185,7 @@ function PlayerComparison() {
                       Strike Rate
                     </span>
                     <span className="font-semibold text-lg">
-                      {(players.batting.first.strikeRate.reduce((acc,run)=> acc+Number(run),0)/ players.batting.second.strikeRate.length).toFixed(2)}
+                      {(players.batting.first.strikeRate.reduce((acc,run)=> acc+Number(run),0)/ players.batting.first.strikeRate.length).toFixed(2)}
                     </span>
                   </div>
                 </div>
