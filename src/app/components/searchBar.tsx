@@ -1,8 +1,8 @@
 "use client";
 
 import axios from "axios";
-import { useState } from "react";
-import { FaSearch } from "react-icons/fa";
+import { useCallback, useState } from "react";
+import debounce from 'lodash/debounce';
 
 export default function SearchBar({ onPlayerSelect }: any) {
   const [searchResults, setSearchResults] = useState<any>([]);
@@ -20,19 +20,31 @@ export default function SearchBar({ onPlayerSelect }: any) {
     setSearchResults([]);
     onPlayerSelect(player);
   }
-  const fetchPlayers = async (value:any) => {
+  const debouncedFetchPlayers = useCallback(
+    debounce(async (value: string) => {
+      try {
+        const playersData = await axios.get(`${API_BASE_URL}/players/search/${value}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        });
+        setSearchResults(playersData.data);
+      } catch (error) {
+        console.error("Error fetching players:", error);
+      }
+    }, 1000), // 500ms delay
+    [] // Empty dependency array ensures the function is created only once
+  );
 
-    setPlayerName(value);
-
-    try {
-      const playersData = await axios.get(`${API_BASE_URL}/players/search/${playerName}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-      setSearchResults(playersData.data);
-    } catch (error) {
-      console.error("Error fetching players:", error);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPlayerName(value); // Update input value immediately
+    
+    // Only trigger search if value is not empty
+    if (value.trim()) {
+      debouncedFetchPlayers(value);
+    } else {
+      setSearchResults([]); // Clear results if input is empty
     }
   };
 
@@ -46,7 +58,7 @@ export default function SearchBar({ onPlayerSelect }: any) {
           type="text"
           placeholder="Search players"
           className="w-full py-3 pl-12 pr-4 rounded-full bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-green-500 dark:focus:ring-blue-400 focus:outline-none shadow-md dark:shadow-lg transition-shadow duration-300"
-          onChange={(e)=>fetchPlayers(e.target.value)}
+          onChange={handleInputChange}
           value={playerName}
         />
 

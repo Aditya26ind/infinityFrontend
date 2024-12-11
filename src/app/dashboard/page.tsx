@@ -1,85 +1,172 @@
 "use client";
-
+import { useState, useEffect } from 'react';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
-import { FaUser, FaTrophy } from 'react-icons/fa';
+import { FaUser, FaTrophy, FaHistory, FaClosedCaptioning, FaAddressCard, FaCross } from 'react-icons/fa';
 import withAuth from '../components/protected';
+import { MdDelete, MdOutlineChangeHistory } from "react-icons/md";
+import { SyncLoader } from 'react-spinners';
+import { BiCross } from 'react-icons/bi';
+import { Cancel } from 'axios';
 
 function PlayerComparison() {
-  const dummyData = [
-    {
-      player1: { name: 'Virat Kohli', runs: 12000, wickets: 4, avg: 59.3, strikeRate: 93.25 },
-      player2: { name: 'Steve Smith', runs: 11000, wickets: 7, avg: 61.1, strikeRate: 88.5 },
-    },
-    {
-      player1: { name: 'Sachin Tendulkar', runs: 18000, wickets: 46, avg: 44.8, strikeRate: 85.7 },
-      player2: { name: 'Ricky Ponting', runs: 13000, wickets: 3, avg: 42.0, strikeRate: 80.0 },
-    },
-  ];
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+  const [aiData, setAiData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [deleteData,setDeleteData] = useState(null);
+
+  
+
+  useEffect(() => {
+    const fetchAiDataHistory = async () => {
+      try {
+        setIsLoading(true);
+        const accessToken = localStorage.getItem('accessToken');
+        
+        const response = await fetch(`${API_BASE_URL}/openai/fetch`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch AI data');
+        }
+
+        const responseData = await response.json();
+        console.log('Fetched Data:', responseData);
+        
+        // Ensure we're setting an array
+        setAiData(Array.isArray(responseData.data) ? responseData.data : []);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Fetch Error:', err);
+        setError(err.message);
+        setIsLoading(false);
+      }
+    };
+
+    // Use a flag to prevent double fetching in development
+    let isMounted = true;
+    if (isMounted) {
+      fetchAiDataHistory();
+    }
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array ensures this runs only once
+
+
+  const handeldelete = async (id) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(`${API_BASE_URL}/openai/delete/${id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete data');
+      }
+      console.log('Deleted Data:', id);
+      alert('Deleted Data');
+      window.location.href = '/dashboard';
+      setDeleteData(id);
+    } catch (err) {
+      console.error('Delete Error:', err);
+    }
+  }
 
   return (
-    <div className="bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-800 text-gray-800 dark:text-gray-200 min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-100">
+      {/* Navbar */}
       <Navbar />
 
-      {/* Main Section */}
-      <section className="py-16 text-center">
-        <h2 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-indigo-300 dark:to-indigo-500">
-          Legendary Showdown
-        </h2>
-        <p className="text-xl text-gray-600 dark:text-gray-400 mt-4">
-          Compare the stats saved in your dashboard
-        </p>
-      </section>
+      {/* Main Content */}
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <div className="flex items-center mb-6">
+            <FaHistory className="mr-3 text-2xl text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-800">Your AI Dashboard</h1>
+          </div>
+          
+          <p className="text-gray-600 mb-6 flex items-center">
+            <MdOutlineChangeHistory className="mr-2" />
+            Explore your AI search history and insights
+          </p>
 
-      {/* Comparison Cards */}
-      <section className="py-10">
-        <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 gap-10">
-          {dummyData.map((data, index) => (
-            <div
-              key={index}
-              className="bg-white dark:bg-gray-800 bg-opacity-90 dark:bg-opacity-60 p-8 rounded-2xl shadow-2xl 
-                         backdrop-blur-lg border border-gray-200 dark:border-gray-700 
-                         transform hover:scale-105 transition-all duration-300"
-            >
-              {/* Player Comparison Header */}
-              <h3 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-6">
-                {data.player1.name} <span className="text-blue-600 dark:text-indigo-400">vs</span> {data.player2.name}
-              </h3>
-
-              <div className="grid grid-cols-3 items-center">
-                {/* Player 1 Stats */}
-                <div className="text-center space-y-3">
-                  <FaUser className="text-blue-500 w-8 h-8 mx-auto mb-2" />
-                  <h4 className="text-lg font-medium text-gray-800 dark:text-gray-300">{data.player1.name}</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Runs: <span className="font-bold text-gray-900 dark:text-white">{data.player1.runs}</span></p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Wickets: <span className="font-bold text-gray-900 dark:text-white">{data.player1.wickets}</span></p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Avg: <span className="font-bold text-gray-900 dark:text-white">{data.player1.avg}</span></p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Strike Rate: <span className="font-bold text-gray-900 dark:text-white">{data.player1.strikeRate}%</span></p>
-                </div>
-
-                {/* Divider */}
-                <div className="flex flex-col items-center text-center space-y-2">
-                  <FaTrophy className="text-yellow-500 w-10 h-10 opacity-80" />
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Comparison</span>
-                </div>
-
-                {/* Player 2 Stats */}
-                <div className="text-center space-y-3">
-                  <FaUser className="text-red-500 w-8 h-8 mx-auto mb-2" />
-                  <h4 className="text-lg font-medium text-gray-800 dark:text-gray-300">{data.player2.name}</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Runs: <span className="font-bold text-gray-900 dark:text-white">{data.player2.runs}</span></p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Wickets: <span className="font-bold text-gray-900 dark:text-white">{data.player2.wickets}</span></p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Avg: <span className="font-bold text-gray-900 dark:text-white">{data.player2.avg}</span></p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Strike Rate: <span className="font-bold text-gray-900 dark:text-white">{data.player2.strikeRate}%</span></p>
-                </div>
-              </div>
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex justify-center items-center h-64">
+              <SyncLoader color="#3B82F6" />
             </div>
-          ))}
-        </div>
-      </section>
+          )}
 
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <strong className="font-bold">Error: </strong>
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+
+          {/* Data Grid */}
+          {!isLoading && !error && (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {aiData.length > 0 ? (
+                aiData.map((data, index) => (
+                  <div 
+                    key={data.id || index} 
+                    className="bg-blue-50 border border-blue-100 rounded-lg p-5 hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-2"
+                  >
+                    <div className="flex items-center mb-4">
+                      <FaUser className="mr-3 text-blue-600" />
+                      <h3 className="text-lg font-semibold text-gray-800">Search Record #{data.id}</h3>
+                    </div>
+                    
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-600">Content:</span>
+                        <span className="text-gray-800 truncate max-w-[200px]">{data.content}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-600">Source:</span>
+                        <span className="text-gray-800">{data.source}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-600">Meta Data:</span>
+                        <span className="text-blue-600 font-bold">{data.metaData}%</span>
+                      </div>
+                    </div>
+
+                    <div onClick={() => handeldelete(data.id)} className="mt-4 border-t border-blue-100 pt-3 text-center">
+                      <MdDelete className="mx-auto text-yellow-500" />
+                      <p className="text-xs text-gray-500 mt-1"></p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-10">
+                  <p className="text-gray-500">No AI search history found</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Footer */}
       <Footer />
     </div>
   );
 }
-export default withAuth(PlayerComparison)
+
+export default withAuth(PlayerComparison);
