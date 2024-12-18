@@ -3,33 +3,26 @@
 import { useState } from "react";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
-import { FaUser, FaTrophy, FaSpinner } from "react-icons/fa";
+import { FaTrophy, FaSpinner } from "react-icons/fa";
 import withAuth from "../components/protected";
 import axios from "axios";
 import SearchBar from "../components/searchBar";
 
-interface players {
+interface Players {
   bowling: any;
   batting: any;
 }
 
-interface ides {
-  player1: number;
-  player2: number;
-}
-
 function PlayerComparison() {
-  const [players, setPlayers] = useState<players>();
+  const [players, setPlayers] = useState<Players | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
-  const [ids, setIds] = useState<ides|null>(null);
+  const [id1, setId1] = useState<number | null>(null);
+  const [id2, setId2] = useState<number | null>(null);
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
   const accessToken = localStorage.getItem("accessToken");
-
-  const [id1, setId1] = useState(null);
-  const [id2, setId2] = useState(null);
 
   const handleCompare = async () => {
     // Reset previous state
@@ -110,7 +103,7 @@ function PlayerComparison() {
           >
             {loading ? (
               <span className="flex items-center justify-center">
-                <FaSpinner className="animate-spin mr-2" />
+                <FaSpinner className="animate -spin mr-2" />
                 Comparing...
               </span>
             ) : (
@@ -121,26 +114,15 @@ function PlayerComparison() {
           {/* Error Message */}
           {error && (
             <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <strong className="font-bold">Error!</strong>
               <span className="block sm:inline">{error}</span>
             </div>
           )}
         </div>
       </section>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-20">
-          <div className="flex flex-col items-center">
-            <FaSpinner className="animate-spin text-green-500 w-16 h-16 mb-4" />
-            <p className="text-xl text-gray-600 dark:text-gray-300">
-              Loading player data...
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Comparison Result Section */}
-      {players && !loading && (
+      {/* Player Comparison Results */}
+      {players && (
         <section className="py-20 bg-gray-100 dark:bg-gray-900">
           <div className="max-w-6xl mx-auto px-6">
             <h2 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
@@ -148,91 +130,82 @@ function PlayerComparison() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               {/* Player 1 Stats */}
-              <div className="bg-white dark:bg-green-800 p-8 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 relative transform hover:scale-105">
-                <h3 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">
-                  {players.batting.first.player.name}
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-200">
-                      Runs
-                    </span>
-                    <span className="font-semibold text-lg">
-                      {players.batting.first.runs.reduce((acc,run)=> acc+Number(run),0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-200">
-                      Wickets
-                    </span>
-                    <span className="font-semibold text-lg">
-                      {players.bowling.first.wickets.reduce((acc,run)=> acc+Number(run),0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-200">
-                      Batting Average
-                    </span>
-                    <span className="font-semibold text-lg">
-                    {(
-                    players.batting.first.average.reduce((acc, run) => acc + Number(run), 0) /
-                    players.batting.first.average.length
-                  ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-200">
-                      Strike Rate
-                    </span>
-                    <span className="font-semibold text-lg">
-                      {(players.batting.first.strikeRate.reduce((acc,run)=> acc+Number(run),0)/ players.batting.first.strikeRate.length).toFixed(2)}
-                    </span>
+              {players.batting.first ? (
+                <div className="bg-white dark:bg-green-800 p-8 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 relative transform hover:scale-105">
+                  <h3 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">
+                    {players.batting.first.player?.name || "N/A"}
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-200">Runs</span>
+                      <span className="font-semibold text-lg">
+                        {players.batting.first.runs.reduce((acc, run) => acc + Number(run), 0)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-200">Wickets</span>
+                      <span className="font-semibold text-lg">
+                        {players.bowling.first.wickets}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-200">Batting Average</span>
+                      <span className="font-semibold text-lg">{(players.batting.first.average.reduce((acc, run) => acc + Number(run), 0) / players.batting.first.average.length).toFixed(2)}</span>
+
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-200">Strike Rate</span>
+                      <span className="font-semibold text-lg">{(players.batting.first.strikeRate.reduce((acc, run) => acc + Number(run), 0) / players.batting.first.strikeRate.length).toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
-                <FaTrophy className="absolute right-4 top-4 text-green-500 w-10 h-10 opacity-30" />
-              </div>
+              ) : (
+                <div className="bg-red-100 p-4 rounded-lg">
+                  <p className="text-red-600">Player 1 data is not available.</p>
+                </div>
+              )}
 
               {/* Player 2 Stats */}
-              <div className="bg-white dark:bg-blue-800 p-8 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 relative transform hover:scale-105">
-                <h3 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">
-                  {players.batting.second.player.name}
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-200">
-                      Runs
-                    </span>
-                    <span className="font-semibold text-lg">
-                    {players.batting.second.runs.reduce((acc, run) => acc + Number(run), 0)}
-                    </span>
+              {players.batting.second ? (
+                <div className="bg-white dark:bg-blue-800 p-8 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 relative transform hover:scale-105">
+                  <h3 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">
+                    {players.batting.second.player?.name || "N/A : Refetch"}
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-200">Runs</span>
+                      <span className="font-semibold text-lg">
+                        {players.batting.second.runs.reduce((acc, run) => acc + Number(run), 0)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-200">Wickets</span>
+                      <span className="font-semibold text-lg">
+                      <span className="font-semibold text-lg">
+                        {players.bowling.first.wickets}
+                      </span>
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-200">Batting Average</span>
+                      <span className="font-semibold text-lg">
+                      <span className="font-semibold text-lg">{(players.batting.first.average.reduce((acc, run) => acc + Number(run), 0) / players.batting.first.average.length).toFixed(2)}</span>
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-200">Strike Rate</span>
+                      <span className="font-semibold text-lg">
+                      <span className="font-semibold text-lg">{(players.batting.first.strikeRate.reduce((acc, run) => acc + Number(run), 0) / players.batting.first.strikeRate.length).toFixed(2)}</span>
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-200">
-                      Wickets
-                    </span>
-                    <span className="font-semibold text-lg">
-                    {players.bowling.second.wickets.reduce((acc,run)=> acc+Number(run),0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-200">
-                      Batting Average
-                    </span>
-                    <span className="font-semibold text-lg">
-                    {(players.batting.second.average.reduce((acc,run)=> acc+Number(run),0)/ players.batting.second.average.length).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-200">
-                      Strike Rate
-                    </span>
-                    <span className="font-semibold text-lg">
-                    {(players.batting.second.strikeRate.reduce((acc,run)=> acc+Number(run),0)/ players.batting.second.strikeRate.length).toFixed(2)}
-                    </span>
-                  </div>
+      
                 </div>
-                <FaTrophy className="absolute right-4 top-4 text-green-500 w-10 h-10 opacity-30" />
-              </div>
+              ) : (
+                <div className="bg-red-100 p-4 rounded-lg">
+                  <p className="text-red-600">Player 2 data is not available.</p>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -243,4 +216,5 @@ function PlayerComparison() {
     </div>
   );
 }
+
 export default withAuth(PlayerComparison);
